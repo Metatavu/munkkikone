@@ -11,6 +11,8 @@ TagManager:
   - munkki
   - rumpuliuska
   - DialogElementti
+  - annostelija
+  - uuni
   layers:
   - Default
   - TransparentFX
