@@ -27,7 +27,14 @@ public class twitterWallController : MonoBehaviour {
     Dictionary<string, string> streamParameters = new Dictionary<string, string>();
 
     List<string> tracks = new List<string>();
-    tracks.Add("food");
+    tracks.Add("hololens");
+    tracks.Add("HoloLens");
+    tracks.Add("metatavu");
+    tracks.Add("hakko");
+    tracks.Add("alihankintamessut");
+    tracks.Add("alihankinta-messut");
+    tracks.Add("augmented");
+    tracks.Add("hologram");
     Twitter.FilterTrack filterTrack = new Twitter.FilterTrack(tracks);
     streamParameters.Add(filterTrack.GetKey(), filterTrack.GetValue());
     twitterListener = StartCoroutine(stream.On(streamParameters, OnStream));
@@ -41,7 +48,7 @@ public class twitterWallController : MonoBehaviour {
   void DisplayTweets() {
     string textToDisplay = "";
     visibleTweets.ForEach(delegate (string tweet) {
-      textToDisplay += "\n" + tweet;
+      textToDisplay += "\n\n" + tweet;
     });
     tweets.text = textToDisplay;
   }
@@ -51,7 +58,7 @@ public class twitterWallController : MonoBehaviour {
       if (messageType == StreamMessageType.Tweet) {
         Tweet tweet = JsonUtility.FromJson<Tweet>(response);
         visibleTweets.Add(tweet.text);
-        if (visibleTweets.Count > 10) {
+        if (visibleTweets.Count > 5) {
           visibleTweets.RemoveAt(0);
         }
         DisplayTweets();

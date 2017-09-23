@@ -8,6 +8,9 @@ public class gazeController : MonoBehaviour {
   public Canvas textCanvas;
   public Text partTitleText;
   public Text partText;
+  public GameObject sokeriRumpu;
+  public GameObject syottoRumpu;
+  public GameObject monkSpawner;
   public float maxInfoDelay;
   public float gazeDelay;
   public float hideDelay;
@@ -48,22 +51,32 @@ public class gazeController : MonoBehaviour {
     { "annostelija", new PartDescription("Syöttötorvi ja -rumpu", "Esikypsennetyt munkit laitetaan syöttörumpuun, josta munkit menevät uuniin syöttörummun kautta. Yhdellä syöttörummun pyörähdyksellä syötetään 5 munkkia kerrallaan uuniin. Syöttötorveen mahtuu kerrallaan varastoon noin 40-60 munkkia.") },
     { "uuni", new PartDescription("Lämmitysuuni", "Uuni lämmittää munkit 100 asteessa 6 minuutin aikana noin 60-80 asteeseen. Syöttörumpu syöttää kerran minuutissa uuniin uuden rivin munkkeja ja uunin kuljetin siirtää munkkeja samalla syklityksellä askeleen eteenpäin. Uunissa mahtuu kerrallaan olemaan 30 munkkia lämmityksessä.") },
     { "sokerirumpu", new PartDescription("Sokerointirumpu", "Uunista lämmitetyt munkit tipahtavat kourua myöden sokerointirumpuun. Sokerointirumpu pyörittää munkkeja siten, että sokeri pyrkii nousemaan ylämäkeen ja munkit etenevät alamäkeen.") },
-    { "hihna", new PartDescription("Siirtokuljetin", "Sokeroinnista munkit tippuvat siirtokuljettimelle, jossa suurin irtosokeri karisee kouruun. Siirtokuljetin siirtää munkit tarjoilukouruun koneen ulkopuolelle.") }
+    { "hihna", new PartDescription("Siirtokuljetin", "Sokeroinnista munkit tippuvat siirtokuljettimelle, jossa suurin irtosokeri karisee kouruun. Siirtokuljetin siirtää munkit tarjoilukouruun koneen ulkopuolelle.") },
+    { "huolto", new PartDescription("Huolto ja pesu", "Koneen pesua varten syöttö- ja sokerointirummut sekä kuljetinhihnat irroitetaan. Pesu tapahtuu liottamalla. Rungot pestään pesunesteellä pyyhkimällä päivittäin. Kone on kokonaan pestävissä vedellä, kun sähkömoottorit irroitetaan.") }
   };
-
+  
   private string prevTag;
   private enum TextState { TEXT_HIDDEN, SHOWING_TEXT, TEXT_VISIBLE, HIDING_TEXT };
   private float textShowTimer;
   private float textHideTimer;
   private float showCancelTimer;
   private float maxInfoTimer;
+  private bool exploded;
+  private munkSpawner spawner;
   private TextState state;
 
   void Start() {
+    spawner = monkSpawner.GetComponent<munkSpawner>() as munkSpawner;
+    exploded = false;
     hideText();
   }
 
   void Update() {
+
+    if (exploded) {
+      return;
+    }
+
     RaycastHit hitInfo;
     if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hitInfo, 20.0f, Physics.DefaultRaycastLayers)) {
       string partTag = hitInfo.collider.gameObject.tag;
@@ -74,6 +87,40 @@ public class gazeController : MonoBehaviour {
       }
     } else {
       handleTagNotFound();
+    }
+  }
+
+  public void explodeMachine() {
+    if (exploded) {
+      return;
+    }
+
+    exploded = true;
+    showText("huolto");
+    spawner.pause();
+    sokeriRumpu.transform.Translate(Vector3.right * 0.8f, Space.World);
+    syottoRumpu.transform.Translate(Vector3.up * 0.5f, Space.World);
+    GameObject[] monks = GameObject.FindGameObjectsWithTag("munkki");
+    foreach (GameObject monk in monks) {
+      Rigidbody monkBody = monk.GetComponent<Rigidbody>() as Rigidbody;
+      monkBody.isKinematic = true;
+    }
+  }
+
+  public void implodeMachine() {
+    if (!exploded) {
+      return;
+    }
+
+    exploded = false;
+    hideText();
+    spawner.resume();
+    sokeriRumpu.transform.Translate(Vector3.right * -0.8f, Space.World);
+    syottoRumpu.transform.Translate(Vector3.down * 0.5f, Space.World);
+    GameObject[] monks = GameObject.FindGameObjectsWithTag("munkki");
+    foreach (GameObject monk in monks) {
+      Rigidbody monkBody = monk.GetComponent<Rigidbody>() as Rigidbody;
+      monkBody.isKinematic = false;
     }
   }
 

@@ -4,6 +4,12 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 
+#if NETFX_CORE
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
+#endif
+
 namespace Twitter
 {
     public class Oauth
@@ -54,10 +60,21 @@ namespace Twitter
             string signatureData = requestHeader + "&" + Helper.UrlEncode(paramString.ToString());
 
             string signatureKey = Helper.UrlEncode(consumerSecret) + "&" + Helper.UrlEncode(accessTokenSecret);
-            HMACSHA1 hmacsha1 = new HMACSHA1(Encoding.ASCII.GetBytes(signatureKey));
-            byte[] signatureBytes = hmacsha1.ComputeHash(Encoding.ASCII.GetBytes(signatureData));
-            return Convert.ToBase64String(signatureBytes);
-        }
+
+          #if NETFX_CORE
+                    var objMacProv = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
+                    byte[] secretKey = Encoding.UTF8.GetBytes(signatureKey);
+                    var hash = objMacProv.CreateHash(secretKey.AsBuffer());
+                    hash.Append(CryptographicBuffer.ConvertStringToBinary(signatureData, BinaryStringEncoding.Utf8));
+                    return CryptographicBuffer.EncodeToBase64String(hash.GetValueAndReset());
+          #else
+                HMACSHA1 hmacsha1 = new HMACSHA1(Encoding.ASCII.GetBytes(signatureKey));
+                byte[] signatureBytes = hmacsha1.ComputeHash(Encoding.ASCII.GetBytes(signatureData));
+                return Convert.ToBase64String(signatureBytes);
+          #endif
+
+
+    }
 
         // The below helper methods are modified from "WebRequestBuilder.cs" in Twitterizer(http://www.twitterizer.net/).
         // Here is its license.

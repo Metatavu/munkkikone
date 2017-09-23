@@ -67,6 +67,8 @@ namespace Twitter
         TwitterStreamCallback callback;
         StreamMessageType messageType;
 
+        private string partialTweet;
+
         public StreamingDownloadHandler(TwitterStreamCallback callback)
         {
             this.callback = callback;
@@ -74,27 +76,23 @@ namespace Twitter
 
         protected override bool ReceiveData(byte[] data, int dataLength)
         {
-            if (data == null || data.Length < 1)
-            {
-                Debug.Log("LoggingDownloadHandler :: ReceiveData - received a null/empty buffer");
-                return false;
-            }
-            string response = Encoding.ASCII.GetString(data);
-            response = response.Replace("\"event\":", "\"event_name\":");
-            messageType = StreamMessageType.None;
-            CheckMessageType(response);
+          if (data == null || data.Length < 1) {
+            Debug.Log("LoggingDownloadHandler :: ReceiveData - received a null/empty buffer");
+            return false;
+          }
+          string response = Encoding.ASCII.GetString(data);
+          response = response.Replace("\"event\":", "\"event_name\":");
+          messageType = StreamMessageType.None;
+          CheckMessageType(response);
 
-            try
-            {
-                callback(JsonHelper.ArrayToObject(response), messageType);
-                return true;
-            } catch (System.Exception e)
-            {
-                Debug.Log("ReceiveData Error : " + e.ToString());
-                return true;
-            }
-            
-        }
+          try {
+            callback(JsonHelper.ArrayToObject(response), messageType);
+            return true;
+          } catch (System.Exception e) {
+            Debug.Log("ReceiveData Error : " + e.ToString());
+            return true;
+          }
+    }
 
         private void CheckMessageType(string data)
         {
@@ -175,7 +173,6 @@ namespace Twitter
 
             } catch (System.Exception e)
             {
-                Debug.Log("CheckMessageType Error : " + e.ToString());
                 messageType = StreamMessageType.None;
                 return;
             }
